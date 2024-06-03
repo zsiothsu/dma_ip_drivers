@@ -567,12 +567,12 @@ static ssize_t cdev_aio_read(struct kiocb *iocb, const struct iovec *io,
 #if KERNEL_VERSION(3, 16, 0) <= LINUX_VERSION_CODE
 static ssize_t cdev_write_iter(struct kiocb *iocb, struct iov_iter *io)
 {
-	return cdev_aio_write(iocb, io->iov, io->nr_segs, iocb->ki_pos);
+	return cdev_aio_write(iocb, io->__iov, io->nr_segs, iocb->ki_pos);
 }
 
 static ssize_t cdev_read_iter(struct kiocb *iocb, struct iov_iter *io)
 {
-	return cdev_aio_read(iocb, io->iov, io->nr_segs, iocb->ki_pos);
+	return cdev_aio_read(iocb, io->__iov, io->nr_segs, iocb->ki_pos);
 }
 #endif
 
@@ -647,7 +647,8 @@ int qdma_cdev_create(struct qdma_cdev_cb *xcb, struct pci_dev *pdev,
 			&xcdev->c2h_qhndl : &xcdev->h2c_qhndl;
 	*priv_data = qhndl;
 	xcdev->dir_init = (1 << qconf->q_type);
-	strcpy(xcdev->name, qconf->name);
+	//strcpy(xcdev->name, qconf->name);
+	memcpy(xcdev->name, qconf->name, strlen(qconf->name));
 
 	xcdev->minor = minor;
 	if (xcdev->minor >= xcb->cdev_minor_cnt) {
@@ -780,7 +781,7 @@ int qdma_cdev_device_init(struct qdma_cdev_cb *xcb)
 
 int qdma_cdev_init(void)
 {
-	qdma_class = class_create(THIS_MODULE, QDMA_CDEV_CLASS_NAME);
+	qdma_class = class_create(QDMA_CDEV_CLASS_NAME);
 	if (IS_ERR(qdma_class)) {
 		pr_err("%s: failed to create class 0x%lx.",
 			QDMA_CDEV_CLASS_NAME, (unsigned long)qdma_class);
